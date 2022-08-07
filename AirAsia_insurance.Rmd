@@ -1,0 +1,146 @@
+#install.packages('readr')
+#install.packages('dplyr')
+#install.packages('ggplot2')
+#install.packages('DataExplorer')
+#install.packages("igraph", type="binary")
+#install.packages('summarytools')
+#install.packages("knitr")
+#install.packages("broom")
+#install.packages("ggpubr")
+#install.packages("shiny")
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(DataExplorer)
+library(summarytools)
+library(knitr)
+library(broom)
+library(ggpubr)
+library(shiny)
+library(shiny)
+
+
+
+
+
+getwd()
+setwd("/Users/hossein.glm/PycharmProjects/AirAsiaInsurance_R")
+
+data <- read.csv("AirAsia_insurance.csv", header = TRUE)
+df <- read.table("AirAsia_insurance.csv", header = T, sep = ",")
+df <- data.frame(df)
+#head(df)
+#Check out the overview of the dataset
+head(data)
+tail(data)
+
+# looking for missing values using the DataExplorer package
+options(repr.plot.width=8, repr.plot.height=2)
+plot_missing(data)
+
+#Getting a feel from it's size and the class of variables
+glimpse(data)
+dim(data)
+
+freq_INS = freq(data$insFlag)
+freq_INS %>% kable()
+
+
+#Day of Week Analysis
+
+data %>%
+group_by(flightDay) %>%
+summarise(numOfFlag = sum(insFlag)) %>%
+ggplot(aes(x = flightDay, y = numOfFlag)) + geom_col() + labs(x = 'Day of Week', y = 'Number of Flag', title = 'Average of Flags in each day')
+
+
+#Insurance status Based on Countries Analysis
+
+ggplot(data, aes(geoNetworkCountry))+
+  geom_bar(fill = "gray")+
+  coord_flip()+
+  theme(axis.title.y = element_text(size = rel(0.8)))
+
+class(data$geoNetworkCountry)
+sumstate <- table(data$geoNetworkCountry)
+sumstate
+
+class(sumstate)
+sumstate <- data.frame(sumstate)
+class(sumstate)
+
+cbind(data$insFlag)
+typeof(data$insFlag)
+
+colnames(sumstate) <- c("geoNetworkCountry","insFlag")
+sumstate <- sumstate[order(sumstate$insFlag),]
+sumstate
+  
+ggplot(sumstate, aes(x= reorder(geoNetworkCountry, insFlag), y = insFlag))+
+  geom_bar(stat = "identity")+
+  coord_flip()+
+  theme(axis.title.y = element_text(size=rel(0.8)))+ 
+  labs(x = 'Countries ', y = 'Insurance Flag Number', title = 'Insurance Based on Countries')
+
+topTenCountries <- sumstate %>%
+  filter(geoNetworkCountry == 'Australia' | geoNetworkCountry == 'Malaysia' | geoNetworkCountry == 'South Korea' | geoNetworkCountry == 'Japan' | geoNetworkCountry == 'Chin'| geoNetworkCountry == 'Indonesia' | geoNetworkCountry == 'Tiwan' | geoNetworkCountry == 'India' | geoNetworkCountry == 'New zeland' | geoNetworkCountry == 'Singapore')
+  
+
+ggplot(topTenCountries, aes(x= reorder(geoNetworkCountry, insFlag), y = insFlag)) + geom_smooth(method = 'auto', se = FALSE) + labs(x = 'Countries ', y = 'Insurance Flag Number', title = 'Insurance Based on Countries')
+
+ggplot(topTenCountries, aes(x = sumstate$insFlag, y = sumstate$geoNetworkCountry)) + geom_smooth(method = 'auto', se = FALSE) + labs(x = ' Country', y = 'Revenue (£)', title = 'Revenue by Country over Time')
+
+#Insurance and Round Trip Comparion
+ggplot(data, aes(x = tripTypeDesc, y = insFlag)) + geom_col() + labs(x = ' Count', y = 'Trip Type Description', title = 'Insurance - Trip Types')
+
+#Insurance and Sales Channel Comparison
+ggplot(data, aes(x = salesChannel, y = insFlag)) + geom_col() + labs(x = ' Count', y = 'Sales Channel', title = 'Insurance - Sales Channel')
+
+#Insurance and Duration of the Flight Comparison
+data$insFlag2 <- ifelse(data$insFlag == 1, "Yes", "No")
+ggplot(data, aes(x = insFlag2, y = flightDurationHour)) + geom_col() + labs(x = ' Insurance Condition', y = 'Count of Flight Duration Hour', title = 'Insurance - Flight Duration Hour')
+
+#Insurance and FNB Category Comparison
+#data$fnbCategory2 <- ifelse(data$fnbCategory==1, "The FNB is reserved" , "The FNB is not reserved")
+#ggplot(data, aes(x = fnbCategory2, y = insFlag)) + geom_col() + labs(x = ' Count', y = 'Insurance Flag', title = 'Insurance - FNB Category')
+
+#Insurance and Seat Category Comparison
+#data$seatCategory2 <- ifelse(data$seatCategory==1, "The seat is reserved" , "The seat is not reserved")
+#ggplot(data, aes(x = seatCategory2, y = flightDurationHour)) + geom_col() + labs(x = ' Count', y = 'Insurance Flag', title = 'Insurance - Seat Category')
+
+
+
+
+#Linear Regression through lm function (flightDurationHour and insFlag)
+summary(data)
+hist(data$flightHour)
+
+data.lm <- lm(flightDurationHour ~ insFlag2, data = data)
+summary(data.lm)
+
+
+par(mfrow=c(2,2))
+plot(data.lm)
+par(mfrow=c(1,1))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
